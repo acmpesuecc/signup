@@ -14,8 +14,7 @@
 
 <div class="container" id="container">
     <div class="form-container sign-in">
-        <!-- Signup Form -->
-        <form action="http://127.0.0.1:5000/login" method="POST" id="signup-form">
+        <form action="http://127.0.0.1:5000/signup" method="POST" id="signup-form">
             <h2>Signup</h2>
             <input type="text" name="name" placeholder="Full Name" required />
             <input type="text" name="username" placeholder="Username (e.g., user@domain.com)" required />
@@ -47,15 +46,10 @@
 
 <script>
     document.getElementById('registerButton').addEventListener('click', function(event) {
-        event.preventDefault(); // Prevent default form submission
-        window.location.href = 'http://127.0.0.1:5000/login'; // Redirect to the signup page
+        event.preventDefault();
+        window.location.href = 'http://127.0.0.1:5000/login'; 
     });
 
-    document.getElementById('signup-form').addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent default form submission
-        window.location.href = 'http://127.0.0.1:5000/login'; // Redirect to the doctor dashboard page
-    });
-</script>
 </script>
 </body>
 </html>
