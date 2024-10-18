@@ -6,6 +6,18 @@
     <title>Appointments</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='appointments.css') }}">
 </head>
+<style>
+    body.light {
+    background-color: white;
+    color: black;
+}
+
+body.dark {
+    background-color: black;
+    color: white;
+}
+
+</style>
 <body>
     <div class="container">
         <!-- Sidebar (Common across all pages) -->
@@ -68,9 +80,11 @@
             <div class="nav">
                 <button id="menu-btn"><span>&#9776;</span></button>
                 <div class="dark-mode">
-                    <span class="active">&#9728;</span>
-                    <span>&#9790;</span>
-                </div>
+                    <button class ="dark-toggle" onclick="toggleMode()">
+                        <span class="active">&#9728;</span>
+
+                        <span>&#9790;</span>
+                    </button>
                 <div class="profile">
                     <div class="profile-photo">
                         <img src="doctor-photo.jpg" alt="Doctor Photo">
@@ -116,5 +130,6 @@
         </section>
     </div>
     <script src="index.js"></script>
+    <script src="dark.js"></script>
 </body>
 </html>
