@@ -1,8 +1,18 @@
-from flask import Flask, render_template, request, redirect, jsonify, url_for
+from flask import Flask, render_template, request, redirect, jsonify, url_for, session
+from flask_session import Session
 import sqlite3
 import os
+import logging
 
 app = Flask(__name__)
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Configure Flask-Session
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SECRET_KEY'] = os.urandom(24)  # Generate a random secret key
+Session(app)
 
 # Get absolute path to the database file
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -23,9 +33,9 @@ def init_db():
                      address TEXT, 
                      profession TEXT)''')
         conn.commit()
-        print("Database initialized successfully.")
+        logging.info("Database initialized successfully.")
     except sqlite3.Error as e:
-        print(f"Database initialization error: {e}")
+        logging.error(f"Database initialization error: {e}")
     finally:
         conn.close()
 
@@ -39,9 +49,12 @@ def signup_page():
 def login_page():
     return render_template('login.html')
 
-# Route to render the doctor page
+# Protected route for the doctor page
 @app.route('/doctor')
 def doctor_page():
+    if 'user_id' not in session or session.get('profession') != 'doctor':
+        logging.warning(f"Unauthorized access attempt to doctor page. Session: {session}")
+        return redirect(url_for('login_page'))
     return render_template('doctor.html')
 
 # Route to handle the signup form submission
@@ -54,67 +67,80 @@ def signup_user():
         address = request.form['address']
         profession = request.form['profession']
 
-        print(f"Received signup data: {name}, {username}, {address}, {profession}")
+        logging.info(f"Received signup data: {name}, {username}, {address}, {profession}")
 
         # Validate username format
         if "@" not in username:
-            print("Invalid username format.")
+            logging.warning("Invalid username format.")
             return jsonify({"success": False, "message": "Invalid username format"})
 
         # Insert data into the users table
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
 
-        print("Inserting user into database...")
+        logging.info("Inserting user into database...")
         c.execute("INSERT INTO users (name, username, password, address, profession) VALUES (?, ?, ?, ?, ?)",
                   (name, username, password, address, profession))
-
+ 
         conn.commit()
-        print("User added successfully.")
+        logging.info("User added successfully.")
         return redirect(url_for('login_page'))
 
     except sqlite3.IntegrityError as e:
-        print(f"Integrity error: {e}")
+        logging.error(f"Integrity error during signup: {e}")
         return jsonify({"success": False, "message": f"Username already taken: {e}"})
     except sqlite3.Error as e:
-        print(f"Database error during signup: {e}")
+        logging.error(f"Database error during signup: {e}")
         return jsonify({"success": False, "message": f"Database error: {e}"})
     finally:
         if conn:
             conn.close()
 
-# Route to handle the login form submission asynchronously
+# Route to handle the login form submission
 @app.route('/login', methods=['POST'])
-async def login_user():
+def login_user():
     try:
         username = request.form['username']
         password = request.form['password']
 
-        print(f"Login attempt by: {username}")
+        logging.info(f"Login attempt by: {username}")
 
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
 
-        print("Checking credentials...")
-        c.execute("SELECT profession FROM users WHERE username = ? AND password = ?", (username, password))
+        logging.info("Checking credentials...")
+        c.execute("SELECT id, profession FROM users WHERE username = ? AND password = ?", (username, password))
         result = c.fetchone()
 
         if result:
-            profession = result[0].lower()
-            print(f"Profession found: {profession}")
-            if profession == 'doctor':
+            user_id, profession = result
+            logging.info(f"User authenticated. User ID: {user_id}, Profession: {profession}")
+            
+            # Create session
+            session['user_id'] = user_id
+            session['profession'] = profession.lower()
+            
+            if profession.lower() == 'doctor':
                 return redirect(url_for('doctor_page'))
             else:
-                return jsonify({"success": True, "profession": profession})
+                return jsonify({"success": True, "message": "Login successful, but only doctor accounts have access to a landing page."})
         else:
-            print("Invalid credentials.")
+            logging.warning(f"Invalid credentials for username: {username}")
             return jsonify({"success": False, "message": "Invalid credentials"})
     except sqlite3.Error as e:
-        print(f"Database error during login: {e}")
+        logging.error(f"Database error during login: {e}")
         return jsonify({"success": False, "message": f"Database error: {e}"})
     finally:
         if conn:
             conn.close()
+
+# Route to handle logout
+@app.route('/logout')
+def logout():
+    logging.info(f"Logout request. Session before clearing: {session}")
+    session.clear()
+    logging.info("Session cleared.")
+    return redirect(url_for('login_page'))
 
 if __name__ == '__main__':
     init_db()  # Initialize the database

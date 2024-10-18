@@ -1,5 +1,5 @@
 import sqlite3
-
+ 
 def is_table_empty(table_name):
     # Connect to the SQLite database
     conn = sqlite3.connect('user_data.db')
