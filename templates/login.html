@@ -28,6 +28,12 @@
                 <span>or use your email password</span>
                 <input type="email" name="username" placeholder="User Name" required>
                 <input type="password" name="password" placeholder="Password" required>
+                <label for="profession">Profession:</label>
+                <select name="profession" required>
+                    <option value="Doctor" selected>Doctor</option>
+                    <option value="Nurse">Nurse</option>
+                    <option value="Admin">Admin</option>
+                </select>
                 <a href="#">Forget Your Password?</a>
                 <button type="submit" id="loginButton">Sign In</button>
             </form>
@@ -76,6 +82,7 @@
                 let result = await response.json();
                 if (result.success) {
                     alert(`Welcome ${result.profession}!`);
+                    window.location.href = '/doctor-landing'; // Redirect to Doctor's landing page
                 } else {
                     alert(result.message);
                 }
@@ -91,3 +98,4 @@
 </body>
 
 </html>
+
