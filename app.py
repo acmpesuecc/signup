@@ -1,7 +1,9 @@
 from flask import Flask, render_template, request, redirect, jsonify, url_for
 import sqlite3
 import os
-
+@app.route('/appointments')
+def appointments_page():
+    return render_template('appointments.html')
 app = Flask(__name__)
 
 # Get absolute path to the database file
